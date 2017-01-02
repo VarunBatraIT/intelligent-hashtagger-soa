@@ -101,7 +101,9 @@
     F.route('/api/add/{total}/hash/json', Api.addHash);
     F.route('/api/add/{total}/hashes/json', Api.addHash);
     F.route('/api/add/hash/json', Api.addHash);
-    return F.route('/api/remove/hash/json', Api.removeHash);
+    F.route('/api/add/hash/json', Api.addHash);
+    F.route('/api/remove/hash/json', Api.removeHash);
+    return F.route('/api/remove/hashes/json', Api.removeHash);
   };
 
 }).call(this);
