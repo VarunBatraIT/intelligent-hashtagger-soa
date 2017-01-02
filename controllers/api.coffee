@@ -1,8 +1,5 @@
 
-natural = require('natural')
 pos = require('pos');
-tagger = new pos.Tagger();
-t = new natural.TreebankWordTokenizer();
 _ = require('lodash')
 class Api
   @removeHash = ->
