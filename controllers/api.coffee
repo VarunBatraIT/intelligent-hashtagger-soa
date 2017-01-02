@@ -1,6 +1,8 @@
 
 pos = require('pos');
+tagger = new pos.Tagger();
 _ = require('lodash')
+stopwords = require('stopwords').english
 class Api
   @removeHash = ->
     sentence = @req.query["sentence"] || ""
@@ -34,9 +36,10 @@ class Api
       )
     words = new pos.Lexer().lex(sentence);
     words = tagger.tag(words)
+    console.log words
     _.each(words, (wordGroup) ->
         word = wordGroup[0]
-        if wordGroup[1] in ["NNP","NN","NNS","FW","JJ","VBG"]
+        if wordGroup[1] in ["NNP","NN","NNS","FW","JJ","VBG","VBZ","VB"]
           initialized[word.replace(/\W/g,'')] = true
         return true
       )
@@ -46,7 +49,8 @@ class Api
       limit = false
     hashedWords = 0
     hashedWords = _.map(normalWords,(word)->
-        if initialized[word.replace(/\W/g,'')] == true && word.replace(/\W/g,'') != ""
+        oWord = word.replace(/\W/g,'')
+        if initialized[oWord] == true && oWord != "" && oWord not in stopwords
           if !limit
             word = "#"+word
           else if total > hashedWords
