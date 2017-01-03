@@ -65,6 +65,7 @@ class Api
     hashedSentence = hashedSentence.join(' ')
     console.log sentence
     console.log hashedSentence
+    hashedSentence
 
 exports.install = ->
     F.route('/api/add/{total}/hash/json', Api.addHash)

@@ -96,7 +96,8 @@
       });
       hashedSentence = hashedSentence.join(' ');
       console.log(sentence);
-      return console.log(hashedSentence);
+      console.log(hashedSentence);
+      return hashedSentence;
     };
 
     return Api;
