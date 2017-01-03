@@ -1,4 +1,3 @@
-
 pos = require('pos');
 tagger = new pos.Tagger();
 _ = require('lodash')
