@@ -26,42 +26,46 @@ class Api
       word
       )
     return words.join(' ')
-  @oAddHash = (sentence,total = -1) ->
-    sentence = Api.oRemoveHash(sentence)
-    normalWords = sentence.split(' ')
-    initialized = {}
-    _.each(normalWords,(word)->
-        initialized[word.replace(/\W/g,'')] = false
-        return true
-      )
-    words = new pos.Lexer().lex(sentence);
-    words = tagger.tag(words)
-    console.log words
-    _.each(words, (wordGroup) ->
-        word = wordGroup[0]
-        if wordGroup[1] in ["NNP","NN","NNS","FW","JJ","VBG","VBZ","VB"]
-          initialized[word.replace(/\W/g,'')] = true
-        return true
-      )
-    console.log initialized
+  @onlyWord = (word) ->
+    word.replace(/\W/g,'')
+  @oAddHash = (sentence, total = -1) ->
+    totalHashed = 0
     limit = true
-    if total <= -1
+    if total == -1
       limit = false
-    hashedWords = 0
-    hashedWords = _.map(normalWords,(word)->
-        oWord = word.replace(/\W/g,'')
-        if initialized[oWord] == true && oWord != "" && oWord not in stopwords
-          if !limit
-            word = "#"+word
-          else if total > hashedWords
-            word = "#"+word
-            hashedWords++
-        word
+    sentence = Api.oRemoveHash(sentence)
+    nwords = sentence.split(' ')
+    words = tagger.tag(new pos.Lexer().lex(sentence))
+    whereToPutHash = {}
+    _.each(nwords, (nword)->
+        whereToPutHash[Api.onlyWord(nword)] = false
+        true
       )
+    priorityHashes = ["NNP","NN","NNS","FW","JJ","VBG","VBZ","VB","VBP"]
+    _.each(priorityHashes, (priorityHash)->
+        _.each(words, (wordGroup)->
+            word = wordGroup[0]
+            type = wordGroup[1]
+            if priorityHash == type && (word.toLowerCase() not in stopwords)
+              if !limit
+                whereToPutHash[Api.onlyWord(word)] = true
+              else if limit && totalHashed < total
+                totalHashed++
+                whereToPutHash[Api.onlyWord(word)] = true
+            true
+          )
+      )
+    hashedSentence = []
+    _.each(nwords, (word)->
+        if whereToPutHash[Api.onlyWord(word)] == true
+          word = "#"+word
+        hashedSentence.push(word)
+        true
+      )
+    hashedSentence = hashedSentence.join(' ')
     console.log sentence
-    hashedSentence = hashedWords.join(' ')
     console.log hashedSentence
-    return hashedSentence
+
 exports.install = ->
     F.route('/api/add/{total}/hash/json', Api.addHash)
     F.route('/api/add/{total}/hashes/json', Api.addHash)

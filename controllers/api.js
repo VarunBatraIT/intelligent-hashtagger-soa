@@ -47,52 +47,56 @@
       return words.join(' ');
     };
 
+    Api.onlyWord = function(word) {
+      return word.replace(/\W/g, '');
+    };
+
     Api.oAddHash = function(sentence, total) {
-      var hashedSentence, hashedWords, initialized, limit, normalWords, words;
+      var hashedSentence, limit, nwords, priorityHashes, totalHashed, whereToPutHash, words;
       if (total == null) {
         total = -1;
       }
-      sentence = Api.oRemoveHash(sentence);
-      normalWords = sentence.split(' ');
-      initialized = {};
-      _.each(normalWords, function(word) {
-        initialized[word.replace(/\W/g, '')] = false;
-        return true;
-      });
-      words = new pos.Lexer().lex(sentence);
-      words = tagger.tag(words);
-      console.log(words);
-      _.each(words, function(wordGroup) {
-        var ref, word;
-        word = wordGroup[0];
-        if ((ref = wordGroup[1]) === "NNP" || ref === "NN" || ref === "NNS" || ref === "FW" || ref === "JJ" || ref === "VBG" || ref === "VBZ" || ref === "VB") {
-          initialized[word.replace(/\W/g, '')] = true;
-        }
-        return true;
-      });
-      console.log(initialized);
+      totalHashed = 0;
       limit = true;
-      if (total <= -1) {
+      if (total === -1) {
         limit = false;
       }
-      hashedWords = 0;
-      hashedWords = _.map(normalWords, function(word) {
-        var oWord;
-        oWord = word.replace(/\W/g, '');
-        if (initialized[oWord] === true && oWord !== "" && indexOf.call(stopwords, oWord) < 0) {
-          if (!limit) {
-            word = "#" + word;
-          } else if (total > hashedWords) {
-            word = "#" + word;
-            hashedWords++;
-          }
-        }
-        return word;
+      sentence = Api.oRemoveHash(sentence);
+      nwords = sentence.split(' ');
+      words = tagger.tag(new pos.Lexer().lex(sentence));
+      whereToPutHash = {};
+      _.each(nwords, function(nword) {
+        whereToPutHash[Api.onlyWord(nword)] = false;
+        return true;
       });
+      priorityHashes = ["NNP", "NN", "NNS", "FW", "JJ", "VBG", "VBZ", "VB", "VBP"];
+      _.each(priorityHashes, function(priorityHash) {
+        return _.each(words, function(wordGroup) {
+          var ref, type, word;
+          word = wordGroup[0];
+          type = wordGroup[1];
+          if (priorityHash === type && (ref = word.toLowerCase(), indexOf.call(stopwords, ref) < 0)) {
+            if (!limit) {
+              whereToPutHash[Api.onlyWord(word)] = true;
+            } else if (limit && totalHashed < total) {
+              totalHashed++;
+              whereToPutHash[Api.onlyWord(word)] = true;
+            }
+          }
+          return true;
+        });
+      });
+      hashedSentence = [];
+      _.each(nwords, function(word) {
+        if (whereToPutHash[Api.onlyWord(word)] === true) {
+          word = "#" + word;
+        }
+        hashedSentence.push(word);
+        return true;
+      });
+      hashedSentence = hashedSentence.join(' ');
       console.log(sentence);
-      hashedSentence = hashedWords.join(' ');
-      console.log(hashedSentence);
-      return hashedSentence;
+      return console.log(hashedSentence);
     };
 
     return Api;
